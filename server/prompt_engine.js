@@ -81,11 +81,7 @@ function createSandbox() {
     body: dummy
   };
 
-  const windowStub = {
-    addEventListener() { },
-    removeEventListener() { },
-    location: { href: "" }
-  };
+  const locationStub = { href: "", hostname: "localhost" };
 
   const sandbox = {
     console,
@@ -95,7 +91,9 @@ function createSandbox() {
     clearInterval,
     TextEncoder,
     TextDecoder,
-    window: windowStub,
+    location: locationStub,
+    addEventListener() { },
+    removeEventListener() { },
     document: documentStub,
     localStorage: {
       getItem() { return null; },

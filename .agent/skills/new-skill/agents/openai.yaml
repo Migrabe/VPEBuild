@@ -1,4 +1,4 @@
 interface:
-  display_name: "Аудит конфликтов опций"
-  short_description: "Проверка конфликтов, логики и совместимости опций"
+  display_name: "РђСѓРґРёС‚ РєРѕРЅС„Р»РёРєС‚РѕРІ РѕРїС†РёР№"
+  short_description: "РџСЂРѕРІРµСЂРєР° РєРѕРЅС„Р»РёРєС‚РѕРІ, РѕС€РёР±РѕРє Рё РЅРµСЃРѕРІРјРµСЃС‚РёРјРѕСЃС‚Рё РѕРїС†РёР№"
   default_prompt: "Use $new-skill to audit this project for option conflicts, mutual exclusions, logic errors, and compatibility issues, then propose updated conflict rules."

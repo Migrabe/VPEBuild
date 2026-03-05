@@ -3384,8 +3384,8 @@ function applyConflictRules() {
 
   // RULE 9: B&W style в†’ disable neon
   if (flags.photoStyleBlackAndWhite) {
-    disableByPredicate("lighting", isNeonLightToken, "Неон не виден в С‡/Р± стиле");
-    disableByPredicate("lightType", isNeonLightToken, "Неон не виден в С‡/Р± стиле");
+    disableByPredicate("lighting", isNeonLightToken, "Неон не виден в ч/б стиле");
+    disableByPredicate("lightType", isNeonLightToken, "Неон не виден в ч/б стиле");
   }
 
   // RULE 10: Neon в†’ disable B&W styles
@@ -3675,7 +3675,7 @@ function checkConflicts() {
   // Anamorphic without cinema purpose
   if (flags.hasAnamorphicLens && state.purpose && !["Cinematic Still", "Advertising campaign"].includes(state.purpose)) warnings.push("Анаморфотная оптика нетипична для «" + state.purpose + "».");
   // B&W photographer style + neon lighting
-  if (flags.photoStyleBlackAndWhite && flags.hasNeonLight) warnings.push("Ч/б стиль + неоновое освещение — неон не виден в С‡/Р±.");
+  if (flags.photoStyleBlackAndWhite && flags.hasNeonLight) warnings.push("Ч/б стиль + неоновое освещение — неон не виден в ч/б.");
   // Text in MJ/SD
   if ((state.textContent || "").trim() && (state.aiModel === "midjourney" || state.aiModel === "stable-diffusion")) warnings.push("Midjourney и Stable Diffusion плохо рендерят текст. Для текста лучше Ideogram или DALL·E 3.");
   // Artistic format + camera/lens

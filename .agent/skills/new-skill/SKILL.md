@@ -1,6 +1,6 @@
 ---
 name: new-skill
-description: Audit codebases for option conflicts, logic errors, mutual exclusions, and compatibility risks across feature combinations. Use when asked to verify interactions between newly added options and existing behavior, detect rule collisions, and propose an updated conflict-resolution model.
+description: Audit codebases for option conflicts, logic errors, mutual exclusions, and compatibility risks across feature combinations. Use when asked to verify interactions between newly added options and existing behavior, detect rule collisions, and propose an updated conflict-resolution model. Specialized for semantic and JSON prompt generation systems for image/video generation.
 ---
 
 # Conflict Logic and Compatibility Auditor
@@ -9,6 +9,10 @@ description: Audit codebases for option conflicts, logic errors, mutual exclusio
 
 Audit option systems that combine presets, toggles, and rule-based pruning.
 Focus on conflicts between new options and existing logic, then propose deterministic updated logic.
+
+Designed for prompt generation systems where options produce semantic text prompts and JSON payloads
+sent to image/video generation engines. Engine list is not fixed — treat capability gates dynamically
+based on what the project declares, not a hardcoded model list.
 
 ## Workflow
 
@@ -46,7 +50,7 @@ Track expected behavior and observed behavior for each pair.
 
 ## Step 3: Detect Problem Classes
 
-Check for these issue types:
+### General conflict types
 
 - Conflicting rules: two rules force opposite outcomes.
 - One-way exclusivity: A disables B, but B does not disable A.
@@ -58,12 +62,57 @@ Check for these issue types:
 
 Treat high-severity issues as those that change final prompt/output silently.
 
+### Prompt structure validation
+
+- JSON schema compliance: validate output against the schema declared by the active engine config,
+  not a hardcoded model list. Flag missing required fields, extra disallowed fields, and type mismatches.
+- Token/length limits: check that assembled prompt string does not exceed the engine's declared limit.
+- Empty or null required fields: detect required prompt fields left blank or set to null on submit.
+- Weight/emphasis syntax: validate `(word:1.2)`, `[word]`, `{word}` — mismatched brackets, out-of-range weights.
+
+### Semantic conflicts
+
+- Contradictory style tags: e.g. `realistic` + `anime`, `dark` + `bright` in same positive prompt.
+- Quality tag collisions: opposing quality modifiers present simultaneously (e.g. `masterpiece` + `low quality`).
+- Duplicate tags with diverging weights: same concept with conflicting emphasis values.
+- Positive/negative prompt overlap: terms present in both positive and negative prompt.
+
+### Engine and model compatibility (dynamic)
+
+- Options sent to an engine that does not declare support for them in the project's engine config.
+- Aspect ratio or resolution values outside the declared range of the active engine.
+- Sampling parameters (steps, CFG, sampler) outside the engine's declared valid range.
+- Auxiliary modules (e.g. ControlNet, adapters) referenced without a compatible base model selected.
+
+### Presets and templates
+
+- Preset override order: user options vs preset — verify precedence is deterministic and documented.
+- Round-trip integrity: `create → export → import → rebuild` produces identical output.
+- Template variable substitution: empty variables, special characters, Unicode in substituted fields.
+- Dual-preset conflict: two active presets that set the same field to different values.
+
+### UI vs server state
+
+- Option enabled in UI but stripped by server normalization — user receives no feedback.
+- Residual state after reset/clear: fields not fully zeroed.
+- Session/history restore: state loaded from history reintroduces pruned or invalid options.
+
+### Edge cases
+
+- Empty prompt submitted to generation endpoint.
+- Maximum-length prompt for the active engine (boundary, over-boundary).
+- Special characters in prompt fields: `"`, `\`, `{}`, backticks, HTML entities.
+- Unicode content (non-Latin scripts, emoji) — encoding round-trip through JSON serialization.
+- Regression guard: existing presets produce identical JSON output before and after rule changes.
+
 ## Step 4: Validate Runtime
 
 Run targeted checks after analysis (and after any fixes):
 
 - Existing smoke tests for option conflicts and prompt generation
 - State round-trip checks (set -> prune -> export -> import -> build)
+- Semantic conflict scan on a representative sample of saved presets
+- Token/length check against each engine's declared limit
 - Launch-level verification:
   - `bash scripts/verify-runtime.sh`
 
@@ -76,7 +125,7 @@ Use this recommended order unless project constraints require another order:
 
 1. Hard constraints (physically impossible or mode-locked combinations)
 2. Mutual exclusivity groups
-3. Engine capability gates
+3. Engine capability gates (read from engine config, not hardcoded)
 4. Preset overrides
 5. Derived recommendations (soft rules, warnings only)
 
@@ -101,6 +150,8 @@ When introducing a new option, verify all items:
 - Added to export/import serialization
 - Added to server compute path
 - Added to prompt and JSON builders (or explicitly excluded)
+- Added to engine capability gate checks (if engine-specific)
+- Added to semantic conflict rules (if it carries style/quality meaning)
 - Added to conflict matrix tests
 - Added to docs/config rule tables with rationale
 
